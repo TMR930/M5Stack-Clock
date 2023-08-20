@@ -13,7 +13,7 @@ const int daylight_offset_sec = 0;
 const int alarm_start_hour = 8;
 const int alarm_end_hour = 21;
 
-const int beep_volume = 3;
+int beep_volume = 3;
 
 int text_color = TFT_PURPLE;
 
@@ -40,6 +40,7 @@ void drawColon(int sec) {
 }
 
 void drawTime(int hh, int mm, int ss) {
+  M5.Lcd.setTextColor(text_color, TFT_BLACK);
   M5.Lcd.setTextSize(1);
   M5.Lcd.setCursor(52, 80, 7);
   drawTimeTextSet(hh);  // Draw hours
@@ -51,11 +52,20 @@ void drawTime(int hh, int mm, int ss) {
 
 void beep() {
   for (size_t i = 0; i <= 1; i++) {
+    M5.Speaker.setVolume(beep_volume);
     M5.Speaker.beep();
     delay(100);
     M5.Speaker.mute();
     delay(200);
   }
+}
+
+void btnAdisplayText(String text) {
+  M5.Lcd.setTextColor(WHITE, BLACK);
+  M5.Lcd.setTextDatum(1);
+  M5.Lcd.setTextFont(1);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.drawString(text, 68, 220);
 }
 
 void setup(void) {
@@ -99,8 +109,17 @@ void loop() {
   mm = timeinfo.tm_min;
   ss = timeinfo.tm_sec;
 
-  // Display the time on the screen
+  // Show on display
   drawTime(hh, mm, ss);
+  btnAdisplayText("Vol:" + String(beep_volume));
+
+  // Set alarm volume
+  if (M5.BtnA.isPressed()) {
+    ++beep_volume;
+    if (beep_volume > 6) beep_volume = 0;
+    btnAdisplayText("Vol:" + String(beep_volume));
+    beep();
+  }
 
   // Set time signal
   if (hh >= alarm_start_hour && hh <= alarm_end_hour) {
